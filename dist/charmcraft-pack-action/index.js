@@ -20055,10 +20055,10 @@ var require_exec = __commonJS({
   }
 });
 
-// src/rockcraft-pack-action.ts
+// src/charmcraft-pack-action.ts
 var core3 = __toESM(require_core());
 
-// src/rockcraft-pack.ts
+// src/charmcraft-pack.ts
 var core2 = __toESM(require_core());
 var exec3 = __toESM(require_exec());
 var fs2 = __toESM(require("fs"));
@@ -20144,51 +20144,54 @@ async function ensureLXD() {
   await exec.exec("sudo", ["lxd", "init", "--auto"]);
   await ensureLXDNetwork();
 }
-async function ensureRockcraft(channel, revision) {
-  const haveRockcraft = await haveExecutable("/snap/bin/rockcraft");
-  core.info("Installing Rockcraft...");
+async function ensureCharmcraft(channel, revision) {
+  const haveCharmcraft = await haveExecutable("/snap/bin/charmcraft");
+  core.info("Installing Charmcraft...");
   await exec.exec("sudo", [
     "snap",
-    haveRockcraft ? "refresh" : "install",
+    haveCharmcraft ? "refresh" : "install",
     revision.length > 0 ? "--revision" : "--channel",
     revision.length > 0 ? revision : channel,
     "--classic",
-    "rockcraft"
+    "charmcraft"
   ]);
 }
 
-// src/rockcraft-pack.ts
+// src/charmcraft-pack.ts
 var allowedVerbosity = ["quiet", "brief", "verbose", "debug", "trace"];
-var RockcraftBuilder = class {
+var CharmcraftBuilder = class {
   projectRoot;
-  rockcraftChannel;
-  rockcraftPackVerbosity;
-  rockcraftRevision;
+  charmcraftChannel;
+  charmcraftPackVerbosity;
+  charmcraftRevision;
   constructor(options) {
     this.projectRoot = expandHome(options.projectRoot);
-    this.rockcraftChannel = options.rockcraftChannel;
-    this.rockcraftRevision = options.rockcraftRevision;
-    if (allowedVerbosity.includes(options.rockcraftPackVerbosity)) {
-      this.rockcraftPackVerbosity = options.rockcraftPackVerbosity;
+    this.charmcraftChannel = options.charmcraftChannel;
+    this.charmcraftRevision = options.charmcraftRevision;
+    if (allowedVerbosity.includes(options.charmcraftPackVerbosity)) {
+      this.charmcraftPackVerbosity = options.charmcraftPackVerbosity;
     } else {
       throw new Error(
-        'Invalid verbosity "${options.rockcraftPackVerbosity}".Allowed values are ${allowedVerbosity.join(", ")}.'
+        'Invalid verbosity "${options.charmcraftPackVerbosity}".Allowed values are ${allowedVerbosity.join(", ")}.'
       );
     }
   }
   async pack() {
-    core2.startGroup("Installing Rockcraft plus dependencies");
+    core2.startGroup("Installing Charmcraft plus dependencies");
     await ensureSnapd();
     await ensureLXD();
-    await ensureRockcraft(this.rockcraftChannel, this.rockcraftRevision);
+    await ensureCharmcraft(
+      this.charmcraftChannel,
+      this.charmcraftRevision
+    );
     core2.endGroup();
-    let rockcraft = "rockcraft pack";
-    let rockcraftPackArgs = "";
-    if (this.rockcraftPackVerbosity) {
-      rockcraftPackArgs = `${rockcraftPackArgs} --verbosity ${this.rockcraftPackVerbosity}`;
+    let charmcraft = "charmcraft pack";
+    let charmcraftPackArgs = "";
+    if (this.charmcraftPackVerbosity) {
+      charmcraftPackArgs = `${charmcraftPackArgs} --verbosity ${this.charmcraftPackVerbosity}`;
     }
-    rockcraft = `${rockcraft} ${rockcraftPackArgs.trim()}`;
-    await exec3.exec("sg", ["lxd", "-c", rockcraft], {
+    charmcraft = `${charmcraft} ${charmcraftPackArgs.trim()}`;
+    await exec3.exec("sg", ["lxd", "-c", charmcraft], {
       cwd: this.projectRoot
     });
   }
@@ -20197,41 +20200,41 @@ var RockcraftBuilder = class {
   async #readdir(dir) {
     return await fs2.promises.readdir(dir);
   }
-  async outputRock() {
+  async outputCharm() {
     const files = await this.#readdir(this.projectRoot);
-    const rocks = files.filter((name) => name.endsWith(".rock"));
-    if (rocks.length === 0) {
-      throw new Error("No .rock files produced by build");
+    const charms = files.filter((name) => name.endsWith(".charm"));
+    if (charms.length === 0) {
+      throw new Error("No .charm files produced by build");
     }
-    if (rocks.length > 1) {
-      core2.warning(`Multiple ROCKs found in ${this.projectRoot}`);
+    if (charms.length > 1) {
+      core2.warning(`Multiple Charms found in ${this.projectRoot}`);
     }
-    return path.join(this.projectRoot, rocks[0]);
+    return path.join(this.projectRoot, charms[0]);
   }
 };
 
-// src/rockcraft-pack-action.ts
+// src/charmcraft-pack-action.ts
 async function run() {
   try {
     const projectRoot = core3.getInput("path");
-    core3.info(`Building ROCK in "${projectRoot}"...`);
-    const rockcraftRevision = core3.getInput("revision");
-    const rockcraftChannel = core3.getInput("rockcraft-channel") || "stable";
-    if (rockcraftRevision.length < 1) {
+    core3.info(`Building Charm in "${projectRoot}"...`);
+    const charmcraftRevision = core3.getInput("revision");
+    const charmcraftChannel = core3.getInput("charmcraft-channel") || "stable";
+    if (charmcraftRevision.length < 1) {
       core3.warning(
-        `Rockcraft revision not provided. Installing from ${rockcraftChannel}`
+        `Charmcraft revision not provided. Installing from ${charmcraftChannel}`
       );
     }
-    const rockcraftPackVerbosity = core3.getInput("verbosity");
-    const builder = new RockcraftBuilder({
+    const charmcraftPackVerbosity = core3.getInput("verbosity");
+    const builder = new CharmcraftBuilder({
       projectRoot,
-      rockcraftChannel,
-      rockcraftPackVerbosity,
-      rockcraftRevision
+      charmcraftChannel,
+      charmcraftPackVerbosity,
+      charmcraftRevision
     });
     await builder.pack();
-    const rock = await builder.outputRock();
-    core3.setOutput("rock", rock);
+    const charm = await builder.outputCharm();
+    core3.setOutput("charm", charm);
   } catch (error) {
     core3.setFailed(error?.message);
   }

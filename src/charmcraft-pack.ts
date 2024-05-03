@@ -39,7 +39,10 @@ export class CharmcraftBuilder {
     core.startGroup('Installing Charmcraft plus dependencies')
     await tools.ensureSnapd()
     await tools.ensureLXD()
-    await tools.ensureCharmcraft(this.charmcraftChannel, this.charmcraftRevision)
+    await tools.ensureCharmcraft(
+      this.charmcraftChannel,
+      this.charmcraftRevision
+    )
     core.endGroup()
 
     let charmcraft = 'charmcraft pack'

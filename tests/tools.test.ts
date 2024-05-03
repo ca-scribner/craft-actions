@@ -334,7 +334,6 @@ test('ensureRockcraft refreshes if Rockcraft is installed', async () => {
   ])
 })
 
-
 test('ensureCharmcraft installs Charmcraft if needed', async () => {
   expect.assertions(4)
 
