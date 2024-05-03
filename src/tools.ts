@@ -109,3 +109,19 @@ export async function ensureRockcraft(
     'rockcraft'
   ])
 }
+
+export async function ensureCharmcraft(
+  channel: string,
+  revision: string
+): Promise<void> {
+  const haveCharmcraft = await haveExecutable('/snap/bin/charmcraft')
+  core.info('Installing Charmcraft...')
+  await exec.exec('sudo', [
+    'snap',
+    haveCharmcraft ? 'refresh' : 'install',
+    revision.length > 0 ? '--revision' : '--channel',
+    revision.length > 0 ? revision : channel,
+    '--classic',
+    'charmcraft'
+  ])
+}

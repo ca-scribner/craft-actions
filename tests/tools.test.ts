@@ -334,6 +334,87 @@ test('ensureRockcraft refreshes if Rockcraft is installed', async () => {
   ])
 })
 
+
+test('ensureCharmcraft installs Charmcraft if needed', async () => {
+  expect.assertions(4)
+
+  const accessMock = jest
+    .spyOn(fs.promises, 'access')
+    .mockImplementation(
+      async (
+        filename: fs.PathLike,
+        mode?: number | undefined
+      ): Promise<void> => {
+        throw new Error('not found')
+      }
+    )
+  const execMock = jest
+    .spyOn(exec, 'exec')
+    .mockImplementation(
+      async (program: string, args?: string[]): Promise<number> => {
+        return 0
+      }
+    )
+
+  await tools.ensureCharmcraft('edge', '')
+
+  expect(accessMock).toHaveBeenCalled()
+  expect(execMock).toHaveBeenNthCalledWith(1, 'sudo', [
+    'snap',
+    'install',
+    '--channel',
+    'edge',
+    '--classic',
+    'charmcraft'
+  ])
+
+  await tools.ensureCharmcraft('stable', '1234')
+
+  expect(accessMock).toHaveBeenCalled()
+  expect(execMock).toHaveBeenNthCalledWith(2, 'sudo', [
+    'snap',
+    'install',
+    '--revision',
+    '1234',
+    '--classic',
+    'charmcraft'
+  ])
+})
+
+test('ensureCharmcraft refreshes if Charmcraft is installed', async () => {
+  expect.assertions(2)
+
+  const accessMock = jest
+    .spyOn(fs.promises, 'access')
+    .mockImplementation(
+      async (
+        filename: fs.PathLike,
+        mode?: number | undefined
+      ): Promise<void> => {
+        return
+      }
+    )
+  const execMock = jest
+    .spyOn(exec, 'exec')
+    .mockImplementation(
+      async (program: string, args?: string[]): Promise<number> => {
+        return 0
+      }
+    )
+
+  await tools.ensureCharmcraft('edge', '')
+
+  expect(accessMock).toHaveBeenCalled()
+  expect(execMock).toHaveBeenNthCalledWith(1, 'sudo', [
+    'snap',
+    'refresh',
+    '--channel',
+    'edge',
+    '--classic',
+    'charmcraft'
+  ])
+})
+
 test('ensureLXDNetwork sets up iptables and warns about Docker', async () => {
   expect.assertions(8)
 

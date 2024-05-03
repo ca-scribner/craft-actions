@@ -39,7 +39,7 @@ jobs:
       uses: ./rockcraft-pack
       id: rockcraft
       with:
-        path: tests
+        path: tests/test-rock
         verbosity: debug
         revision: ${{ matrix.revision }}
     - name: Assert revision number
@@ -53,3 +53,30 @@ jobs:
       with:
         name: test-rock_${{ matrix.os }}
         path: ${{ steps.rockcraft.outputs.rock }}
+
+  run-charmcraft-pack-action:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04]
+        revision: ['3451', '']
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build a Charm
+      uses: ./charmcraft-pack
+      id: charmcraft
+      with:
+        path: tests/test-charm
+        verbosity: debug
+        revision: ${{ matrix.revision }}
+    - name: Assert revision number
+      if: matrix.revision != ''
+      run: |
+        set -ex
+        installed_rev="$(snap info charmcraft | tail -1 | awk '{print $(NF-2)}')"
+        [ "$installed_rev" == "(${{ matrix.revision }})" ]
+    - name: Upload Charm
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-charm${{ matrix.os }}
+        path: ${{ steps.charmcraft.outputs.charm }}

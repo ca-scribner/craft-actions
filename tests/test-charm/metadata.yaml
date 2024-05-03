@@ -1,0 +1,14 @@
+name: charmcraft-pack-test
+summary: Charm for testing charmcraft-pack
+description: Charm for testing charmcraft-pack
+containers:
+  noop:
+    resource: noop
+resources:
+  noop:
+    type: oci-image
+    description: ''
+    upstream-source: ubuntu:22.04
+  myfile:
+    type: file
+    filename: myfile.txt
