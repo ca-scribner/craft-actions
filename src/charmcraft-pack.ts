@@ -69,7 +69,12 @@ export class CharmcraftBuilder {
     core.startGroup('Restoring Charmcraft package cache')
     const cachePaths: string[] = [localCharmcraftCache]
     const restoreKeys: string[] = [charmcraftCacheRestoreKey]
-    const primaryKey: string = charmcraftCacheRestoreKey
+
+    const githubContextString = core.getInput('github_context')
+    const githubContext = JSON.parse(githubContextString)
+    const strategyContextString = core.getInput('strategy_context')
+    const strategyContext = JSON.parse(strategyContextString)
+    const primaryKey: string = [charmcraftCacheRestoreKey, githubContext['run_id'], githubContext['run_attempt'], githubContext['job'], ].join('-')
 
     const cacheKey = await cache.restoreCache(
       cachePaths,
