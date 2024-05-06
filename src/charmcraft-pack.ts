@@ -70,10 +70,19 @@ export class CharmcraftBuilder {
     const cachePaths: string[] = [localCharmcraftCache]
     const restoreKeys: string[] = [charmcraftCacheRestoreKey]
 
+    var githubContext = null
     const githubContextString = core.getInput('github_context')
-    const githubContext = JSON.parse(githubContextString)
+    if (githubContextString) {
+      githubContext = JSON.parse(githubContextString)
+      core.info('DEBUG: failed to get githubContext')
+    }
     const strategyContextString = core.getInput('strategy_context')
-    const strategyContext = JSON.parse(strategyContextString)
+    var strategyContext = null
+    if (strategyContextString) {
+      strategyContext = JSON.parse(strategyContextString)
+    } else{
+      core.info('DEBUG: failed to get strategyContext')
+    }
     const primaryKey: string = [charmcraftCacheRestoreKey, githubContext['run_id'], githubContext['run_attempt'], githubContext['job'], ].join('-')
 
     const cacheKey = await cache.restoreCache(
