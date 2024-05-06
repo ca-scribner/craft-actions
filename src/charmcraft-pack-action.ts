@@ -20,12 +20,21 @@ async function run(): Promise<void> {
 
     const builder = new CharmcraftBuilder({
       projectRoot,
+      // TODO: Remove cachePackages from builder
       cachePackages,
       charmcraftChannel,
       charmcraftPackVerbosity,
       charmcraftRevision
     })
+
+    if (cachePackages) {
+      await builder.restoreCache()
+    }
     await builder.pack()
+    if (cachePackages) {
+      await builder.saveCache()
+    }    
+    
     const charm = await builder.outputCharm()
     core.setOutput('charm', charm)
   } catch (error) {

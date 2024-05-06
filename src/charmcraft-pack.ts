@@ -44,9 +44,6 @@ export class CharmcraftBuilder {
 
   async pack(): Promise<void> {
     core.startGroup('Installing Charmcraft plus dependencies')
-    if (this.cachePackages) {
-      await this.restoreCache()
-    }
     await tools.ensureSnapd()
     await tools.ensureLXD()
     await tools.ensureCharmcraft(
@@ -94,6 +91,32 @@ export class CharmcraftBuilder {
         `Cache not found for input keys: ${[primaryKey, ...restoreKeys].join(
           ', '
         )}`
+      )      
+    }
+    core.endGroup()
+  }
+
+  async saveCache(): Promise<void> {
+    core.info('DEBUG: saveCache is alive!')
+    core.startGroup('Saving Charmcraft package cache')
+    const cachePaths: string[] = [localCharmcraftCache]
+
+    // TODO: Add strategy id here.  Not sure how to get that context in the action.
+    const primaryKey: string = [charmcraftCacheRestoreKey, github.context.runId, github.context.runNumber, github.context.job].join('-')
+
+    const cacheKey = await cache.saveCache(
+      cachePaths,
+      primaryKey,
+    )
+
+    if (cacheKey) {
+      core.info(`Saved to cacheKey: ${cacheKey}`)
+    } else {
+      // throw new Error(
+      //     `Failed to restore cache entry. Exiting as fail-on-cache-miss is set. Input key: ${primaryKey}`
+      // );
+      core.info(
+        `Could not save to primaryKey: ${primaryKey}`
       )      
     }
     core.endGroup()

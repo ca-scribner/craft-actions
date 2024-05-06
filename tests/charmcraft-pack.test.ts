@@ -69,7 +69,8 @@ test('CharmcraftBuilder.pack runs a Charm build', async () => {
     'sg',
     ['lxd', '-c', 'charmcraft pack --verbosity debug'],
     {
-      cwd: projectDir
+      cwd: projectDir,
+      env: expect.objectContaining({CRAFT_SHARED_CACHE: '/tmp/charmcraft-cache' })
     }
   )
 })

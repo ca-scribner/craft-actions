@@ -74621,7 +74621,7 @@ Other caches with similar key:`);
         }));
       });
     }
-    function saveCache(cacheId, archivePath, options) {
+    function saveCache2(cacheId, archivePath, options) {
       return __awaiter2(this, void 0, void 0, function* () {
         const httpClient = createHttpClient();
         core4.debug("Upload cache");
@@ -74636,7 +74636,7 @@ Other caches with similar key:`);
         core4.info("Cache saved successfully");
       });
     }
-    exports2.saveCache = saveCache;
+    exports2.saveCache = saveCache2;
   }
 });
 
@@ -75048,7 +75048,7 @@ var require_cache2 = __commonJS({
       });
     }
     exports2.restoreCache = restoreCache2;
-    function saveCache(paths, key, options, enableCrossOsArchive = false) {
+    function saveCache2(paths, key, options, enableCrossOsArchive = false) {
       var _a, _b, _c, _d, _e;
       return __awaiter2(this, void 0, void 0, function* () {
         checkPaths(paths);
@@ -75109,7 +75109,7 @@ var require_cache2 = __commonJS({
         return cacheId;
       });
     }
-    exports2.saveCache = saveCache;
+    exports2.saveCache = saveCache2;
   }
 });
 
@@ -79321,9 +79321,6 @@ var CharmcraftBuilder = class {
   }
   async pack() {
     core2.startGroup("Installing Charmcraft plus dependencies");
-    if (this.cachePackages) {
-      await this.restoreCache();
-    }
     await ensureSnapd();
     await ensureLXD();
     await ensureCharmcraft(
@@ -79364,6 +79361,24 @@ var CharmcraftBuilder = class {
     }
     core2.endGroup();
   }
+  async saveCache() {
+    core2.info("DEBUG: saveCache is alive!");
+    core2.startGroup("Saving Charmcraft package cache");
+    const cachePaths = [localCharmcraftCache];
+    const primaryKey = [charmcraftCacheRestoreKey, github.context.runId, github.context.runNumber, github.context.job].join("-");
+    const cacheKey = await cache.saveCache(
+      cachePaths,
+      primaryKey
+    );
+    if (cacheKey) {
+      core2.info(`Saved to cacheKey: ${cacheKey}`);
+    } else {
+      core2.info(
+        `Could not save to primaryKey: ${primaryKey}`
+      );
+    }
+    core2.endGroup();
+  }
   // This wrapper is for the benefit of the tests, due to the crazy
   // typing of fs.promises.readdir()
   async #readdir(dir) {
@@ -79398,12 +79413,19 @@ async function run() {
     const charmcraftPackVerbosity = core3.getInput("verbosity");
     const builder = new CharmcraftBuilder({
       projectRoot,
+      // TODO: Remove cachePackages from builder
       cachePackages,
       charmcraftChannel,
       charmcraftPackVerbosity,
       charmcraftRevision
     });
+    if (cachePackages) {
+      await builder.restoreCache();
+    }
     await builder.pack();
+    if (cachePackages) {
+      await builder.saveCache();
+    }
     const charm = await builder.outputCharm();
     core3.setOutput("charm", charm);
   } catch (error) {
