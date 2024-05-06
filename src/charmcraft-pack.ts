@@ -43,6 +43,7 @@ export class CharmcraftBuilder {
 
   async pack(): Promise<void> {
     core.startGroup('Installing Charmcraft plus dependencies')
+    await this.restoreCache()
     await tools.ensureSnapd()
     await tools.ensureLXD()
     await tools.ensureCharmcraft(
@@ -64,6 +65,7 @@ export class CharmcraftBuilder {
   }
 
   async restoreCache(): Promise<void> {
+    core.startGroup('Restoring Charmcraft package cache')
     const cachePaths: string[] = [localCharmcraftCache]
     const restoreKeys: string[] = [charmcraftCacheRestoreKey]
     const primaryKey: string = charmcraftCacheRestoreKey
@@ -74,7 +76,9 @@ export class CharmcraftBuilder {
       restoreKeys
     )
 
-    if (!cacheKey) {
+    if (cacheKey) {
+      core.info(`Got hit on cacheKey: ${cacheKey}`)
+    } else {
       // throw new Error(
       //     `Failed to restore cache entry. Exiting as fail-on-cache-miss is set. Input key: ${primaryKey}`
       // );
@@ -82,9 +86,7 @@ export class CharmcraftBuilder {
         `Cache not found for input keys: ${[primaryKey, ...restoreKeys].join(
           ', '
         )}`
-      )
-
-      return
+      )      
     }
   }
 
