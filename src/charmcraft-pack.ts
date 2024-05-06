@@ -9,12 +9,11 @@ import * as path from 'path'
 import * as tools from './tools'
 
 const allowedVerbosity = ['quiet', 'brief', 'verbose', 'debug', 'trace']
-const localCharmcraftCache = '/tmp/charmcraft-cache'
 const charmcraftCacheRestoreKey = 'craft-shared-cache'
 
 interface CharmcraftBuilderOptions {
   projectRoot: string
-  cachePackages: boolean
+  charmcraftCache: string
   charmcraftChannel: string
   charmcraftPackVerbosity: string
   charmcraftRevision: string
@@ -22,7 +21,7 @@ interface CharmcraftBuilderOptions {
 
 export class CharmcraftBuilder {
   projectRoot: string
-  cachePackages: boolean
+  charmcraftCache: string
   charmcraftChannel: string
   charmcraftPackVerbosity: string
   charmcraftRevision: string
@@ -31,7 +30,7 @@ export class CharmcraftBuilder {
     this.projectRoot = tools.expandHome(options.projectRoot)
     this.charmcraftChannel = options.charmcraftChannel
     this.charmcraftRevision = options.charmcraftRevision
-    this.cachePackages = options.cachePackages
+    this.charmcraftCache = options.charmcraftCache
     if (allowedVerbosity.includes(options.charmcraftPackVerbosity)) {
       this.charmcraftPackVerbosity = options.charmcraftPackVerbosity
     } else {
@@ -62,64 +61,8 @@ export class CharmcraftBuilder {
     // DEBUG: Confirm this actually writes where I expect
     await exec.exec('sg', ['lxd', '-c', charmcraft], {
       cwd: this.projectRoot,
-      env: { ...process.env, CRAFT_SHARED_CACHE: localCharmcraftCache }
+      env: { ...process.env, CRAFT_SHARED_CACHE: this.charmcraftCache }
     })
-  }
-
-  async restoreCache(): Promise<void> {
-    core.info('DEBUG: restoreCache is alive!')
-    core.startGroup('Restoring Charmcraft package cache')
-    const cachePaths: string[] = [localCharmcraftCache]
-    const restoreKeys: string[] = [charmcraftCacheRestoreKey]
-
-    // TODO: Add strategy id here.  Not sure how to get that context in the action.
-    const primaryKey: string = [charmcraftCacheRestoreKey, github.context.runId, github.context.runNumber, github.context.job].join('-')
-
-    const cacheKey = await cache.restoreCache(
-      cachePaths,
-      primaryKey,
-      restoreKeys
-    )
-
-    if (cacheKey) {
-      core.info(`Got hit on cacheKey: ${cacheKey}`)
-    } else {
-      // throw new Error(
-      //     `Failed to restore cache entry. Exiting as fail-on-cache-miss is set. Input key: ${primaryKey}`
-      // );
-      core.info(
-        `Cache not found for input keys: ${[primaryKey, ...restoreKeys].join(
-          ', '
-        )}`
-      )      
-    }
-    core.endGroup()
-  }
-
-  async saveCache(): Promise<void> {
-    core.info('DEBUG: saveCache is alive!')
-    core.startGroup('Saving Charmcraft package cache')
-    const cachePaths: string[] = [localCharmcraftCache]
-
-    // TODO: Add strategy id here.  Not sure how to get that context in the action.
-    const primaryKey: string = [charmcraftCacheRestoreKey, github.context.runId, github.context.runNumber, github.context.job].join('-')
-
-    const cacheKey = await cache.saveCache(
-      cachePaths,
-      primaryKey,
-    )
-
-    if (cacheKey) {
-      core.info(`Saved to cacheKey: ${cacheKey}`)
-    } else {
-      // throw new Error(
-      //     `Failed to restore cache entry. Exiting as fail-on-cache-miss is set. Input key: ${primaryKey}`
-      // );
-      core.info(
-        `Could not save to primaryKey: ${primaryKey}`
-      )      
-    }
-    core.endGroup()
   }
 
   // This wrapper is for the benefit of the tests, due to the crazy
@@ -141,3 +84,79 @@ export class CharmcraftBuilder {
     return path.join(this.projectRoot, charms[0])
   }
 }
+
+interface CharmcraftCacherOptions {
+  path: string
+  restoreKey: string
+  uniqueKey: string
+}
+
+export class CharmcraftCacher {
+  path: string
+  restoreKey: string
+  uniqueKey: string
+
+  constructor(options: CharmcraftCacherOptions) {
+    this.path = options.path
+    this.restoreKey = options.restoreKey
+    this.uniqueKey = options.uniqueKey
+  }
+
+  async restoreCache(): Promise<void> {
+    core.info('DEBUG: restoreCache is alive!')
+    core.startGroup('Restoring Charmcraft package cache')
+    const cachePaths: string[] = [this.path]
+    const restoreKeys: string[] = [this.restoreKey]
+    const primaryKey: string = [this.restoreKey, this.uniqueKey].join('-')
+
+    const cacheKey = await cache.restoreCache(
+      cachePaths,
+      primaryKey,
+      restoreKeys
+    )
+
+    if (cacheKey) {
+      core.info(`Cache restored successfully - found item with cacheKey ${cacheKey}`)
+    } else {
+      // throw new Error(
+      //     `Failed to restore cache entry. Exiting as fail-on-cache-miss is set. Input key: ${primaryKey}`
+      // );
+      core.info(
+        `Cache not found for input keys: ${[primaryKey, ...restoreKeys].join(
+          ', '
+        )}`
+      )      
+    }
+    core.endGroup()
+  }
+
+  async saveCache(): Promise<void> {
+    core.info('DEBUG: saveCache is alive!')
+    core.startGroup('Saving Charmcraft package cache')
+    const cachePaths: string[] = [this.path]
+
+    const cacheKey = await cache.saveCache(
+      cachePaths,
+      this.primaryKey(),
+    )
+
+    if (cacheKey) {
+      core.info(`Saved to cacheKey: ${cacheKey}`)
+    } else {
+      // throw new Error(
+      //     `Failed to restore cache entry. Exiting as fail-on-cache-miss is set. Input key: ${primaryKey}`
+      // );
+      core.info(
+        `Could not save to primaryKey: ${this.primaryKey()}`
+      )      
+    }
+    core.endGroup()
+  }
+
+  primaryKey(): string {
+    const primaryKey: string = [this.restoreKey, this.uniqueKey].join('-')
+    return primaryKey
+  }
+
+}
+

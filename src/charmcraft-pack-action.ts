@@ -18,22 +18,16 @@ async function run(): Promise<void> {
     }
     const charmcraftPackVerbosity = core.getInput('verbosity')
 
+    const localCharmcraftCache = '/tmp/charmcraft-cache'
+
     const builder = new CharmcraftBuilder({
       projectRoot,
-      // TODO: Remove cachePackages from builder
-      cachePackages,
+      charmcraftCache: localCharmcraftCache,
       charmcraftChannel,
       charmcraftPackVerbosity,
       charmcraftRevision
     })
-
-    if (cachePackages) {
-      await builder.restoreCache()
-    }
     await builder.pack()
-    if (cachePackages) {
-      await builder.saveCache()
-    }    
     
     const charm = await builder.outputCharm()
     core.setOutput('charm', charm)
