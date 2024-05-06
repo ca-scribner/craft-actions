@@ -75264,10 +75264,19 @@ var CharmcraftBuilder = class {
     core2.startGroup("Restoring Charmcraft package cache");
     const cachePaths = [localCharmcraftCache];
     const restoreKeys = [charmcraftCacheRestoreKey];
+    var githubContext = null;
     const githubContextString = core2.getInput("github_context");
-    const githubContext = JSON.parse(githubContextString);
+    if (githubContextString) {
+      githubContext = JSON.parse(githubContextString);
+      core2.info("DEBUG: failed to get githubContext");
+    }
     const strategyContextString = core2.getInput("strategy_context");
-    const strategyContext = JSON.parse(strategyContextString);
+    var strategyContext = null;
+    if (strategyContextString) {
+      strategyContext = JSON.parse(strategyContextString);
+    } else {
+      core2.info("DEBUG: failed to get strategyContext");
+    }
     const primaryKey = [charmcraftCacheRestoreKey, githubContext["run_id"], githubContext["run_attempt"], githubContext["job"]].join("-");
     const cacheKey = await cache.restoreCache(
       cachePaths,
