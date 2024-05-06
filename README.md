@@ -72,6 +72,67 @@ steps:
       verbosity: debug
 ```
 
+## charmcraft-pack
+
+Can be used to build a Charm (with Charmcraft). It expects a "charmcraft.yaml" file
+to exist in its execution path.
+
+### Usage
+
+```yaml
+steps:
+  - uses: actions/checkout@v3
+  - uses: canonical/craft-actions/charmcraft-pack@main
+```
+
+This will install and configure LXD and Charmcraft, and then invoke `charmcraft`
+to build a new Charm, based on a "charmcraft.yaml" file located in the root of
+the workspace.
+
+You can also upload the resulting Charm as a GitHub artifact as follows:
+
+```yaml
+steps:
+  - uses: actions/checkout@v3
+  - uses: canonical/craft-actions/charmcraft-pack@main
+    id: charmcraft
+  - uses: actions/upload-artifact@v3
+    with:
+      name: charm
+      path: ${{ steps.charmcraft.outputs.charm }}
+```
+
+Additionally, any following steps will already have Charmcraft available for
+direct invocation through the shell.
+
+#### Inputs
+
+##### `path`
+
+If your Charmcraft project ("charmcraft.yaml") is not located in the root of the
+workspace, you can specify an alternative location via the `path` input
+parameter.
+
+```yaml
+steps:
+  - uses: actions/checkout@v3
+  - uses: canonical/craft-actions/charmcraft-pack@main
+    with:
+      path: path/to/charmcraft/project/
+```
+
+##### `verbosity`
+
+This `verbosity` input parameter can be used to set the build verbosity level to one of 'quiet', 'brief', 'verbose', 'debug' or 'trace' (the default).
+
+```yaml
+steps:
+  - uses: actions/checkout@v3
+  - uses: canonical/craft-actions/charmcraft-pack@main
+    with:
+      verbosity: debug
+```
+
 ---
 
 ## Committing code

@@ -62,6 +62,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
+    # DEBUG: REMOVE THIS
+    - name: emit charmcraft cache directory contents
+      run: |
+        find /tmp/charmcraft-cache | wc -l
+        find /tmp/charmcraft-cache/wheels | wc -l
     - name: Build a Charm
       uses: ./charmcraft-pack
       id: charmcraft
@@ -69,6 +74,10 @@ jobs:
         path: tests/test-charm
         verbosity: debug
         revision: ${{ matrix.revision }}
+    - name: emit charmcraft cache directory contents
+      run: |
+        find /tmp/charmcraft-cache | wc -l
+        find /tmp/charmcraft-cache/wheels | wc -l
     - name: Assert revision number
       if: matrix.revision != ''
       run: |

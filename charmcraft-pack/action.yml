@@ -27,6 +27,14 @@ inputs:
 
       If not provided, it defaults to whatever revision is in latest/stable.
     default: ''
+  cache-packages:
+    description: >
+      Set whether the action will save charmcraft's package build cache to
+      the repository's cache.  See https://github.com/actions/cache for
+      information on scoping.
+
+      Must be set to "true" or "false".  If not provided, it defaults to true.
+    default: 'true'
 outputs:
   charm:
     description: 'The file name of the resulting Charm.'
