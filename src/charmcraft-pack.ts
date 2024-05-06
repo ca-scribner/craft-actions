@@ -2,6 +2,7 @@
 
 import * as cache from '@actions/cache'
 import * as core from '@actions/core'
+import * as github from '@actions/github'
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
 import * as path from 'path'
@@ -43,7 +44,9 @@ export class CharmcraftBuilder {
 
   async pack(): Promise<void> {
     core.startGroup('Installing Charmcraft plus dependencies')
-    await this.restoreCache()
+    if (this.cachePackages) {
+      await this.restoreCache()
+    }
     await tools.ensureSnapd()
     await tools.ensureLXD()
     await tools.ensureCharmcraft(
@@ -70,21 +73,8 @@ export class CharmcraftBuilder {
     const cachePaths: string[] = [localCharmcraftCache]
     const restoreKeys: string[] = [charmcraftCacheRestoreKey]
 
-    var githubContext = null
-    const githubContextString = core.getInput('github_context')
-    if (githubContextString) {
-      core.info(githubContextString)
-      githubContext = JSON.parse(githubContextString)
-      core.info('DEBUG: failed to get githubContext')
-    }
-    const strategyContextString = core.getInput('strategy_context')
-    var strategyContext = null
-    if (strategyContextString) {
-      strategyContext = JSON.parse(strategyContextString)
-    } else{
-      core.info('DEBUG: failed to get strategyContext')
-    }
-    const primaryKey: string = [charmcraftCacheRestoreKey, githubContext['run_id'], githubContext['run_attempt'], githubContext['job'], ].join('-')
+    // TODO: Add strategy id here.  Not sure how to get that context in the action.
+    const primaryKey: string = [charmcraftCacheRestoreKey, github.context.runId, github.context.runNumber, github.context.job].join('-')
 
     const cacheKey = await cache.restoreCache(
       cachePaths,

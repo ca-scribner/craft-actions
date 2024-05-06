@@ -2,6 +2,7 @@
 
 import * as os from 'os'
 import * as path from 'path'
+import * as cache from '@actions/cache'
 import * as exec from '@actions/exec'
 import * as build from '../src/charmcraft-pack'
 import * as tools from '../src/tools'
@@ -14,6 +15,7 @@ afterEach(() => {
 test('CharmcraftBuilder expands tilde in project root', () => {
   let builder = new build.CharmcraftBuilder({
     projectRoot: '~',
+    cachePackages: false,
     charmcraftChannel: 'edge',
     charmcraftPackVerbosity: 'trace',
     charmcraftRevision: '1'
@@ -22,6 +24,7 @@ test('CharmcraftBuilder expands tilde in project root', () => {
 
   builder = new build.CharmcraftBuilder({
     projectRoot: '~/foo/bar',
+    cachePackages: false,
     charmcraftChannel: 'stable',
     charmcraftPackVerbosity: 'trace',
     charmcraftRevision: '1'
@@ -52,6 +55,7 @@ test('CharmcraftBuilder.pack runs a Charm build', async () => {
   const projectDir = 'project-root'
   const builder = new build.CharmcraftBuilder({
     projectRoot: projectDir,
+    cachePackages: false,
     charmcraftChannel: 'stable',
     charmcraftPackVerbosity: 'debug',
     charmcraftRevision: '1'
@@ -92,6 +96,7 @@ test('CharmcraftBuilder.build can set the Charmcraft channel', async () => {
 
   const builder = new build.CharmcraftBuilder({
     projectRoot: '.',
+    cachePackages: false,
     charmcraftChannel: 'test-channel',
     charmcraftPackVerbosity: 'trace',
     charmcraftRevision: ''
@@ -123,6 +128,7 @@ test('CharmcraftBuilder.build can set the Charmcraft revision', async () => {
 
   const builder = new build.CharmcraftBuilder({
     projectRoot: '.',
+    cachePackages: false,
     charmcraftChannel: 'channel',
     charmcraftPackVerbosity: 'trace',
     charmcraftRevision: '123'
@@ -154,6 +160,7 @@ test('CharmcraftBuilder.build can pass known verbosity', async () => {
 
   const builder = new build.CharmcraftBuilder({
     projectRoot: '.',
+    cachePackages: false,
     charmcraftChannel: 'stable',
     charmcraftPackVerbosity: 'trace',
     charmcraftRevision: '1'
@@ -169,6 +176,7 @@ test('CharmcraftBuilder.build can pass known verbosity', async () => {
   const badBuilder = () => {
     new build.CharmcraftBuilder({
       projectRoot: '.',
+      cachePackages: false,
       charmcraftChannel: 'stable',
       charmcraftPackVerbosity: 'fake-verbosity',
       charmcraftRevision: '1'
@@ -183,6 +191,7 @@ test('CharmcraftBuilder.outputCharm fails if there are no Charms', async () => {
   const projectDir = 'project-root'
   const builder = new build.CharmcraftBuilder({
     projectRoot: projectDir,
+    cachePackages: false,
     charmcraftChannel: 'stable',
     charmcraftPackVerbosity: 'trace',
     charmcraftRevision: '1'
@@ -204,6 +213,7 @@ test('CharmcraftBuilder.outputCharm returns the first Charm', async () => {
   const projectDir = 'project-root'
   const builder = new build.CharmcraftBuilder({
     projectRoot: projectDir,
+    cachePackages: false,
     charmcraftChannel: 'stable',
     charmcraftPackVerbosity: 'trace',
     charmcraftRevision: '1'
@@ -215,4 +225,27 @@ test('CharmcraftBuilder.outputCharm returns the first Charm', async () => {
 
   await expect(builder.outputCharm()).resolves.toEqual('project-root/one.charm')
   expect(readdir).toHaveBeenCalled()
+})
+
+test('CharmcraftBuilder.restoreCache() restores the package cache', async () => {
+  expect.assertions(1)
+
+  const restoreCache = jest
+    .spyOn(cache, 'restoreCache')
+    .mockImplementation(async (): Promise<string | undefined> => {
+      return '0'
+    })
+
+    const builder = new build.CharmcraftBuilder({
+      projectRoot: "~",
+      cachePackages: true,
+      charmcraftChannel: 'stable',
+      charmcraftPackVerbosity: 'trace',
+      charmcraftRevision: '1'
+    })
+
+    builder.restoreCache()
+
+  expect(restoreCache).toHaveBeenCalled()
+
 })
