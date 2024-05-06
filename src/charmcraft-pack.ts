@@ -65,6 +65,7 @@ export class CharmcraftBuilder {
   }
 
   async restoreCache(): Promise<void> {
+    core.info('DEBUG: restoreCache is alive!')
     core.startGroup('Restoring Charmcraft package cache')
     const cachePaths: string[] = [localCharmcraftCache]
     const restoreKeys: string[] = [charmcraftCacheRestoreKey]
@@ -88,6 +89,7 @@ export class CharmcraftBuilder {
         )}`
       )      
     }
+    core.endGroup()
   }
 
   // This wrapper is for the benefit of the tests, due to the crazy
