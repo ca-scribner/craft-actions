@@ -18890,7 +18890,7 @@ var require_core = __commonJS({
       process.env["PATH"] = `${inputPath}${path2.delimiter}${process.env["PATH"]}`;
     }
     exports2.addPath = addPath;
-    function getInput2(name, options) {
+    function getInput3(name, options) {
       const val = process.env[`INPUT_${name.replace(/ /g, "_").toUpperCase()}`] || "";
       if (options && options.required && !val) {
         throw new Error(`Input required and not supplied: ${name}`);
@@ -18900,9 +18900,9 @@ var require_core = __commonJS({
       }
       return val.trim();
     }
-    exports2.getInput = getInput2;
+    exports2.getInput = getInput3;
     function getMultilineInput(name, options) {
-      const inputs = getInput2(name, options).split("\n").filter((x) => x !== "");
+      const inputs = getInput3(name, options).split("\n").filter((x) => x !== "");
       if (options && options.trimWhitespace === false) {
         return inputs;
       }
@@ -18912,7 +18912,7 @@ var require_core = __commonJS({
     function getBooleanInput(name, options) {
       const trueValue = ["true", "True", "TRUE"];
       const falseValue = ["false", "False", "FALSE"];
-      const val = getInput2(name, options);
+      const val = getInput3(name, options);
       if (trueValue.includes(val))
         return true;
       if (falseValue.includes(val))
@@ -75264,7 +75264,11 @@ var CharmcraftBuilder = class {
     core2.startGroup("Restoring Charmcraft package cache");
     const cachePaths = [localCharmcraftCache];
     const restoreKeys = [charmcraftCacheRestoreKey];
-    const primaryKey = charmcraftCacheRestoreKey;
+    const githubContextString = core2.getInput("github_context");
+    const githubContext = JSON.parse(githubContextString);
+    const strategyContextString = core2.getInput("strategy_context");
+    const strategyContext = JSON.parse(strategyContextString);
+    const primaryKey = [charmcraftCacheRestoreKey, githubContext["run_id"], githubContext["run_attempt"], githubContext["job"]].join("-");
     const cacheKey = await cache.restoreCache(
       cachePaths,
       primaryKey,
