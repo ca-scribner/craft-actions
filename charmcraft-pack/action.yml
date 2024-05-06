@@ -41,8 +41,6 @@ outputs:
 runs:
   using: 'node20'
   main: '../dist/charmcraft-pack-action/index.js'
-  pre: '../dist/charmcraft-pack-action/restore-cache.js'
-  # post: '../dist/charmcraft-pack-action/save-cache.js'
 branding:
   icon: layers
   color: orange
