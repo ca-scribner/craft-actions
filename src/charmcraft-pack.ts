@@ -73,6 +73,7 @@ export class CharmcraftBuilder {
     var githubContext = null
     const githubContextString = core.getInput('github_context')
     if (githubContextString) {
+      core.info(githubContextString)
       githubContext = JSON.parse(githubContextString)
       core.info('DEBUG: failed to get githubContext')
     }
