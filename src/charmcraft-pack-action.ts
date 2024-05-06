@@ -25,8 +25,6 @@ async function run(): Promise<void> {
     var cacher = null
 
     if (cachePackages) {
-      core.info("Restoring charmcraft package cache")
-
       cacher = new CharmcraftCacher({
         path: localCharmcraftCache,
         restoreKey,
@@ -48,8 +46,6 @@ async function run(): Promise<void> {
     await builder.pack()
     
     if (cachePackages) {
-      core.info("Saving charmcraft package cache")
-
       cacher.saveCache()
     }
 

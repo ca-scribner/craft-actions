@@ -79429,7 +79429,6 @@ async function run() {
     const uniqueKey = [github.context.runId, github.context.runNumber, github.context.job].join("-");
     var cacher = null;
     if (cachePackages) {
-      core3.info("Restoring charmcraft package cache");
       cacher = new CharmcraftCacher({
         path: localCharmcraftCache,
         restoreKey,
@@ -79449,7 +79448,6 @@ async function run() {
     });
     await builder.pack();
     if (cachePackages) {
-      core3.info("Saving charmcraft package cache");
       cacher.saveCache();
     }
     const charm = await builder.outputCharm();
