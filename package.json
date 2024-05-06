@@ -13,7 +13,7 @@
     "format-check": "prettier --check **/*.ts",
     "lint": "eslint src/**/*.ts",
     "lint-fix": "eslint src/**/*.ts --fix",
-    "pack": "esbuild --platform=node --target=node18 --bundle src/rockcraft-pack-action.ts --outfile=dist/rockcraft-pack-action/index.js; esbuild --platform=node --target=node18 --bundle src/charmcraft-pack-action.ts --outfile=dist/charmcraft-pack-action/index.js; esbuild --platform=node --target=node18 --bundle src/charmcraft-pack-pre-action.ts --outfile=dist/charmcraft-pack-action/pre.js",
+    "pack": "for action in src/*action.ts; do esbuild --platform=node --target=node18 --bundle \"$action\" --outfile=dist/\"$(basename -s '.ts' $action)\"/index.js; done",
     "all": "npm install && npm run build && npm run format-check && npm run lint && npm test && npm run pack"
   },
   "repository": {

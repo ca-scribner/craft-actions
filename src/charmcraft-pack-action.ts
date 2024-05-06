@@ -1,7 +1,8 @@
 // -*- mode: javascript; js-indent-level: 2 -*-
 
 import * as core from '@actions/core'
-import {CharmcraftBuilder} from './charmcraft-pack'
+import * as github from '@actions/github'
+import {CharmcraftBuilder, CharmcraftCacher} from './charmcraft-pack'
 
 async function run(): Promise<void> {
   try {
@@ -9,16 +10,32 @@ async function run(): Promise<void> {
     core.info(`Building Charm in "${projectRoot}"...`)
     const charmcraftRevision = core.getInput('revision')
     const charmcraftChannel = core.getInput('charmcraft-channel') || 'stable'
-    const cachePackages =
-      core.getInput('cache-packages').toLowerCase() === 'true'
     if (charmcraftRevision.length < 1) {
       core.warning(
         `Charmcraft revision not provided. Installing from ${charmcraftChannel}`
       )
     }
     const charmcraftPackVerbosity = core.getInput('verbosity')
+    const cachePackages =
+      core.getInput('cache-packages').toLowerCase() === 'true'
 
     const localCharmcraftCache = '/tmp/charmcraft-cache'
+    const restoreKey = "craft-shared-cache"
+    const uniqueKey: string = [github.context.runId, github.context.runNumber, github.context.job].join('-')
+    var cacher = null
+
+    if (cachePackages) {
+      core.info("Restoring charmcraft package cache")
+
+      cacher = new CharmcraftCacher({
+        path: localCharmcraftCache,
+        restoreKey,
+        uniqueKey
+      })
+    } else {
+      core.info("Charmcraft package caching disabled")
+      return
+    }
 
     const builder = new CharmcraftBuilder({
       projectRoot,
@@ -29,6 +46,12 @@ async function run(): Promise<void> {
     })
     await builder.pack()
     
+    if (cachePackages) {
+      core.info("Saving charmcraft package cache")
+
+      cacher.saveCache()
+    }
+
     const charm = await builder.outputCharm()
     core.setOutput('charm', charm)
   } catch (error) {

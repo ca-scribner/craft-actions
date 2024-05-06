@@ -51,6 +51,7 @@ export class CharmcraftBuilder {
     )
     core.endGroup()
 
+    core.startGroup('Packing the charm')
     let charmcraft = 'charmcraft pack'
     let charmcraftPackArgs = ''
     if (this.charmcraftPackVerbosity) {
@@ -63,6 +64,7 @@ export class CharmcraftBuilder {
       cwd: this.projectRoot,
       env: { ...process.env, CRAFT_SHARED_CACHE: this.charmcraftCache }
     })
+    core.endGroup()
   }
 
   // This wrapper is for the benefit of the tests, due to the crazy
