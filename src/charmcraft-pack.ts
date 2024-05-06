@@ -1,5 +1,6 @@
 // -*- mode: javascript; js-indent-level: 2 -*-
 
+import * as cache from '@actions/cache'
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as fs from 'fs'
@@ -7,9 +8,12 @@ import * as path from 'path'
 import * as tools from './tools'
 
 const allowedVerbosity = ['quiet', 'brief', 'verbose', 'debug', 'trace']
+const localCharmcraftCache = '/tmp/charmcraft-cache'
+const charmcraftCacheRestoreKey = 'craft-shared-cache'
 
 interface CharmcraftBuilderOptions {
   projectRoot: string
+  cachePackages: boolean
   charmcraftChannel: string
   charmcraftPackVerbosity: string
   charmcraftRevision: string
@@ -17,6 +21,7 @@ interface CharmcraftBuilderOptions {
 
 export class CharmcraftBuilder {
   projectRoot: string
+  cachePackages: boolean
   charmcraftChannel: string
   charmcraftPackVerbosity: string
   charmcraftRevision: string
@@ -25,6 +30,7 @@ export class CharmcraftBuilder {
     this.projectRoot = tools.expandHome(options.projectRoot)
     this.charmcraftChannel = options.charmcraftChannel
     this.charmcraftRevision = options.charmcraftRevision
+    this.cachePackages = options.cachePackages
     if (allowedVerbosity.includes(options.charmcraftPackVerbosity)) {
       this.charmcraftPackVerbosity = options.charmcraftPackVerbosity
     } else {
@@ -55,6 +61,31 @@ export class CharmcraftBuilder {
     await exec.exec('sg', ['lxd', '-c', charmcraft], {
       cwd: this.projectRoot
     })
+  }
+
+  async restoreCache(): Promise<void> {
+    const cachePaths: string[] = [localCharmcraftCache]
+    const restoreKeys: string[] = [charmcraftCacheRestoreKey]
+    const primaryKey: string = charmcraftCacheRestoreKey
+
+    const cacheKey = await cache.restoreCache(
+      cachePaths,
+      primaryKey,
+      restoreKeys
+    )
+
+    if (!cacheKey) {
+      // throw new Error(
+      //     `Failed to restore cache entry. Exiting as fail-on-cache-miss is set. Input key: ${primaryKey}`
+      // );
+      core.info(
+        `Cache not found for input keys: ${[primaryKey, ...restoreKeys].join(
+          ', '
+        )}`
+      )
+
+      return
+    }
   }
 
   // This wrapper is for the benefit of the tests, due to the crazy

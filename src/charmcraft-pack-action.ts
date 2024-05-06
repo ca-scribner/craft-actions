@@ -9,6 +9,8 @@ async function run(): Promise<void> {
     core.info(`Building Charm in "${projectRoot}"...`)
     const charmcraftRevision = core.getInput('revision')
     const charmcraftChannel = core.getInput('charmcraft-channel') || 'stable'
+    const cachePackages =
+      core.getInput('cache-packages').toLowerCase() === 'true'
     if (charmcraftRevision.length < 1) {
       core.warning(
         `Charmcraft revision not provided. Installing from ${charmcraftChannel}`
@@ -18,6 +20,7 @@ async function run(): Promise<void> {
 
     const builder = new CharmcraftBuilder({
       projectRoot,
+      cachePackages,
       charmcraftChannel,
       charmcraftPackVerbosity,
       charmcraftRevision
