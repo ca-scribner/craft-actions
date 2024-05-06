@@ -79435,6 +79435,7 @@ async function run() {
         restoreKey,
         uniqueKey
       });
+      cacher.restoreCache();
     } else {
       core3.info("Charmcraft package caching disabled");
       return;

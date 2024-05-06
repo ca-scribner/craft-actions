@@ -32,6 +32,7 @@ async function run(): Promise<void> {
         restoreKey,
         uniqueKey
       })
+      cacher.restoreCache()
     } else {
       core.info("Charmcraft package caching disabled")
       return
