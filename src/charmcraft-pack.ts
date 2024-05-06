@@ -62,8 +62,10 @@ export class CharmcraftBuilder {
     }
 
     charmcraft = `${charmcraft} ${charmcraftPackArgs.trim()}`
+    // DEBUG: Confirm this actually writes where I expect
     await exec.exec('sg', ['lxd', '-c', charmcraft], {
-      cwd: this.projectRoot
+      cwd: this.projectRoot,
+      env: { ...process.env, CRAFT_SHARED_CACHE: localCharmcraftCache }
     })
   }
 

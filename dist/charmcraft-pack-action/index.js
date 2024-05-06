@@ -79338,7 +79338,8 @@ var CharmcraftBuilder = class {
     }
     charmcraft = `${charmcraft} ${charmcraftPackArgs.trim()}`;
     await exec3.exec("sg", ["lxd", "-c", charmcraft], {
-      cwd: this.projectRoot
+      cwd: this.projectRoot,
+      env: { ...process.env, CRAFT_SHARED_CACHE: localCharmcraftCache }
     });
   }
   async restoreCache() {
